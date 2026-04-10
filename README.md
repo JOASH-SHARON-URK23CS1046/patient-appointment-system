@@ -51,3 +51,6 @@ kubectl port-forward svc/frontend 3000:80
 kubectl port-forward svc/api-gateway 8080:8080
 ```
 Open `http://localhost:3000` to interact with the system.
+
+
+
