@@ -1,0 +1,30 @@
+- name: Deploy Medical System to VM
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Install Docker Compose
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Ensure Docker is running
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Copy Code
+      copy:
+        src: ../
+        dest: /opt/patient-system
+
+    - name: Start Services
+      command: docker-compose up -d --build
+      args:
+        chdir: /opt/patient-system

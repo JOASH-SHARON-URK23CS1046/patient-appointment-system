@@ -1,0 +1,68 @@
+name: Microservices CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build & Push API Gateway
+        run: |
+          docker build -t $DOCKER_USERNAME/api-gateway:latest ./api-gateway
+          docker push $DOCKER_USERNAME/api-gateway:latest
+
+      - name: Build & Push User Service
+        run: |
+          docker build -t $DOCKER_USERNAME/user-service:latest ./user-service
+          docker push $DOCKER_USERNAME/user-service:latest
+
+      - name: Build & Push Appointment Service
+        run: |
+          docker build -t $DOCKER_USERNAME/appointment-service:latest ./appointment-service
+          docker push $DOCKER_USERNAME/appointment-service:latest
+
+      - name: Build & Push Queue Service
+        run: |
+          docker build -t $DOCKER_USERNAME/queue-service:latest ./queue-service
+          docker push $DOCKER_USERNAME/queue-service:latest
+
+      - name: Build & Push Frontend
+        run: |
+          docker build -t $DOCKER_USERNAME/patient-frontend:latest ./frontend
+          docker push $DOCKER_USERNAME/patient-frontend:latest
+
+  deploy_to_kubernetes:
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Using a mock Local/Minikube setup via kind for Github Actions
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1.4.0
+
+      - name: Deploy to K8s
+        run: |
+          kubectl apply -f k8s/databases.yml
+          kubectl apply -f k8s/api-gateway.yml
+          kubectl apply -f k8s/user-service.yml
+          kubectl apply -f k8s/appointment-service.yml
+          kubectl apply -f k8s/queue-service.yml
+          kubectl apply -f k8s/frontend.yml
+          
+          echo "Deployment Applied Successfully to Cluster"
+          kubectl get pods

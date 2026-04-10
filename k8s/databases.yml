@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-users
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-users
+  template:
+    metadata:
+      labels:
+        app: mongo-users
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-users
+spec:
+  selector:
+    app: mongo-users
+  ports:
+  - port: 27017
+    targetPort: 27017
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-appointments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-appointments
+  template:
+    metadata:
+      labels:
+        app: mongo-appointments
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-appointments
+spec:
+  selector:
+    app: mongo-appointments
+  ports:
+  - port: 27017
+    targetPort: 27017
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-queue
+  template:
+    metadata:
+      labels:
+        app: mongo-queue
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-queue
+spec:
+  selector:
+    app: mongo-queue
+  ports:
+  - port: 27017
+    targetPort: 27017

@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # --- DATABASES ---
+  mongo-users:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+
+  mongo-appointments:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+
+  mongo-queue:
+    image: mongo:latest
+    ports:
+      - "27019:27017"
+
+  mongo-notifications:
+    image: mongo:latest
+    ports:
+      - "27020:27017"
+
+  # --- MICROSERVICES ---
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - USER_SERVICE_URL=http://user-service:5001
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:5002
+      - QUEUE_SERVICE_URL=http://queue-service:5003
+    depends_on:
+      - user-service
+      - appointment-service
+      - queue-service
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://mongo-users:27017/usersDb
+    depends_on:
+      - mongo-users
+
+  appointment-service:
+    build: ./appointment-service
+    ports:
+      - "5002:5002"
+    environment:
+      - MONGO_URI=mongodb://mongo-appointments:27017/appointmentsDb
+    depends_on:
+      - mongo-appointments
+
+  queue-service:
+    build: ./queue-service
+    ports:
+      - "5003:5003"
+    environment:
+      - MONGO_URI=mongodb://mongo-queue:27017/queueDb
+    depends_on:
+      - mongo-queue
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "5004:5004"
+    environment:
+      - MONGO_URI=mongodb://mongo-notifications:27017/notificationsDb
+    depends_on:
+      - mongo-notifications
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
